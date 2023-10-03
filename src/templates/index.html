@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Idea Generator</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Add your CSS styling here */
+        #creativitySlider {
+            width: 100%;
+        }
+
+        .sliderLabel {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #generateNamesBtn.loading {
+            pointer-events: none;
+            /* Disallow clicking while loading */
+            position: relative;
+            /* Relative positioning to put the spinner */
+        }
+
+        #generateNamesBtn.loading::after {
+            content: "";
+            /* The spinner doesn't need content */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container.mt-5 {
+            /* Modify the main container styling */
+            flex: 1;
+        }
+
+        .footer {
+            background-color: #f8f9fa;
+            border-top: 1px solid #e5e5e5;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            z-index: 1000;
+            /* This ensures the footer is above other content */
+        }
+
+        .container.mt-5 {
+            padding-bottom: 70px;
+            /* Adjust based on the height of your footer */
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="#">MuseWhisper</a>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <form>
+                    <div class="form-group">
+                        <label for="ideaDescription">Describe your Company/Website Idea</label>
+                        <textarea class="form-control" id="ideaDescription" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="creativitySlider" class="sliderLabel">
+                            <span>Creativity Level</span>
+                            <span id="sliderValue">5</span>
+                        </label>
+                        <input type="range" class="form-control-range" id="creativitySlider" min="1" max="10" value="5"
+                            oninput="document.getElementById('sliderValue').innerText = this.value">
+                    </div>
+                    <div class="form-group">
+                        <label for="keywords">Keywords (Up to 500 characters)</label>
+                        <textarea class="form-control" id="keywords" rows="3" maxlength="500"></textarea>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="generateNamesBtn"
+                        onclick="generateNames()">Generate Names</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="row mt-4" id="nameSuggestions">
+            <!-- Suggestion Cards will appear here -->
+        </div>
+
+        <!-- Affiliate Links Section -->
+        <div class="row mt-4" id="affiliateLinks">
+            <div class="col-md-12">
+                <h4>Affiliate Links (These help to fund the site)</h4>
+                <a href="https://www.tkqlhce.com/click-101008374-15479619" target="_top">
+                    <img src="https://www.ftjcfx.com/image-101008374-15479619" width="300" height="600"
+                        alt=".COM for just $5.98 at Namecheap" border="0" /></a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container">
+            <span class="text-muted">Built by TeqOps Limited</span>
+            <div id="donate-button-container">
+                <div id="donate-button"></div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="https://www.paypalobjects.com/donate/sdk/donate-sdk.js" charset="UTF-8"></script>
+    <script>
+        PayPal.Donation.Button({
+            env: 'production',
+            hosted_button_id: '3L2MU8TRGZUMW',
+            image: {
+                src: 'https://www.paypalobjects.com/en_GB/i/btn/btn_donate_LG.gif',
+                alt: 'Donate with PayPal button',
+                title: 'PayPal - The safer, easier way to pay online!',
+            }
+        }).render('#donate-button');
+    </script>
+    <script>
+
+        // method to post ideaDescription to /api/generate when the 'Generate Names' button is clicked
+        function generateNames() {
+            var generateNamesBtn = document.getElementById("generateNamesBtn");
+
+            // Disable the button and show the spinner
+            generateNamesBtn.disabled = true;
+            generateNamesBtn.classList.add('loading');
+
+            var ideaDescription = document.getElementById("ideaDescription").value;
+            var creativityLevel = document.getElementById("creativitySlider").value;
+            var keywords = document.getElementById("keywords").value;
+
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/api/generate", true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var jsonResponse = JSON.parse(xhr.responseText);
+                    var nameSuggestionsDiv = document.getElementById('nameSuggestions');
+
+                    // Clear existing suggestions
+                    nameSuggestionsDiv.innerHTML = '';
+
+                    jsonResponse.forEach(function (suggestion) {
+                        var card = createCard(suggestion);
+                        nameSuggestionsDiv.appendChild(card);
+                    });
+                }
+                if (xhr.readyState == 4) {
+                    generateNamesBtn.disabled = false;
+                    generateNamesBtn.classList.remove('loading');
+                }
+            }
+
+            xhr.send(JSON.stringify({
+                ideaDescription: ideaDescription,
+                creativityLevel: creativityLevel,
+                keywords: keywords
+            }));
+        }
+
+        function createCard(suggestion) {
+            var cardDiv = document.createElement('div');
+            cardDiv.className = 'col-md-4';
+
+            var card = document.createElement('div');
+            card.className = 'card mb-4';
+
+            var cardBody = document.createElement('div');
+            cardBody.className = 'card-body';
+
+            var cardTitle = document.createElement('h5');
+            cardTitle.className = 'card-title';
+            cardTitle.innerText = suggestion.name;
+
+            var cardText = document.createElement('p');
+            cardText.className = 'card-text';
+            cardText.innerText = 'Domain Available: Yes';
+
+            var googleResults = document.createElement('p');
+            googleResults.className = 'card-text';
+            googleResults.innerText = 'Google Results: ' + suggestion.searchResultsCount;
+
+            cardBody.appendChild(cardTitle);
+            cardBody.appendChild(cardText);
+            cardBody.appendChild(googleResults);
+
+            card.appendChild(cardBody);
+            cardDiv.appendChild(card);
+
+            return cardDiv;
+        }
+
+        // On clicking the 'Generate Names' button, use JavaScript/AJAX to call the backend service 
+        // and then dynamically create suggestion cards in the 'nameSuggestions' div
+    </script>
+</body>
+
+</html>
