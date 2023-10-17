@@ -11,6 +11,11 @@ on:
 jobs:
   merge_request_checks:
     runs-on: ubuntu-latest
+  
+    services:
+      docker:
+        image: docker:latest
+        options: --privileged
 
     strategy:
       matrix:
@@ -20,11 +25,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Docker
-        run: dockerd-entrypoint.sh &
-
       - name: Install make
-        run: apk add --no-cache make
+        run:  |
+        sudo apt-get update
+        sudo apt-get install -y make        
 
       - name: Build and run Docker image
         run: make ${{ matrix.make-command }}
