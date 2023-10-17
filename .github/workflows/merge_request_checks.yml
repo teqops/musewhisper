@@ -1,0 +1,37 @@
+name: Merge Request CI/CD
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  merge_request_checks:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        make-command: ["lint", "unit-test", "safety"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker
+        run: dockerd-entrypoint.sh &
+
+      - name: Install make
+        run: apk add --no-cache make
+
+      - name: Build and run Docker image
+        run: make ${{ matrix.make-command }}
+        
+      - name: Check for errors and block merge if any failed
+        run: |
+          if [[ $? -ne 0 ]]; then
+            echo "One or more checks failed. Blocking the merge."
+            exit 1
+          fi
