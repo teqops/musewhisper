@@ -12,17 +12,24 @@ up:
 
 lint:
 	docker build -f Dockerfile --target test -t myapp-test .
-	docker run -it --rm myapp-test \
+	docker run --rm myapp-test \
 		flake8 --exclude=*migrations*,*venv*,*__pycache__* .
 
 safety:
 	docker build -f Dockerfile --target test -t myapp-test .
-	docker run -it --rm myapp-test \
+	docker run --rm myapp-test \
 		pip-audit -r /opt/requirements.txt
 
 unit-test:
 	docker build -f Dockerfile --target test -t myapp-test .
-	docker run -it --env-file .env --rm myapp-test \
+	docker run \
+		-e DEBUG=True \
+		-e DEVELOPMENT=True \
+		-e LOG_LEVEL=DEBUG \
+		-e OPENAI_KEY=xxx \
+		-e GOOGLE_API_KEY=xxx \
+		-e WHOAPI_KEY=xxx \
+		--rm myapp-test \
 		pytest /opt/tests
 
 pre-commit: lint safety unit-test

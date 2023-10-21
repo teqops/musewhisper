@@ -30,7 +30,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y make        
 
-      - name: Build and run Docker image
+      - name: Running pre merge checks
         run: make ${{ matrix.make-command }}
         
       - name: Check for errors and block merge if any failed
